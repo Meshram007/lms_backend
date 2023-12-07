@@ -61,7 +61,6 @@ const swaggerOptions = {
   apis: ['app.js'],
 };
 
-
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
 function extractCertificateInfo(qrCodeText) {
@@ -214,69 +213,74 @@ app.get("/", (req, res) => {
  */
 
 app.post("/api/issue", async (req, res) => {
-  const Certificate_Number = req.body.Certificate_Number;
-  const name = req.body.name;
-  const courseName = req.body.courseName;
-  const Grant_Date = req.body.Grant_Date;
-  const Expiration_Date = req.body.Expiration_Date;
+  try {
+    const Certificate_Number = req.body.Certificate_Number;
+    const name = req.body.name;
+    const courseName = req.body.courseName;
+    const Grant_Date = req.body.Grant_Date;
+    const Expiration_Date = req.body.Expiration_Date;
 
-  const fields = {
-    Certificate_Number: Certificate_Number,
-    name: name,
-    courseName: courseName,
-    Grant_Date: Grant_Date,
-    Expiration_Date: Expiration_Date,
-  };
-  const hashedFields = {};
-  for (const field in fields) {
-    hashedFields[field] = calculateHash(fields[field]);
-  }
-  const combinedHash = calculateHash(JSON.stringify(hashedFields));
-
-  // Blockchain processing.
-  const contract = await web3i();
-
-  const val = await contract.methods.verifyCertificate(combinedHash).call();
-
-  if (val[0] == true && val[1] == Certificate_Number) {
-    res.status(400).json({ message: "Certificate already issued" });
-  } else {
-    const tx = contract.methods.issueCertificate(
-      Certificate_Number,
-      combinedHash
-    );
-
-    hash = await confirm(tx);
-
-    const qrCodeData = `Transaction Hash: "${hash}",
-Certificate Hash: ${combinedHash},
-Certificate Number: ${Certificate_Number},
-Name: ${name},
-Course Name: ${courseName},
-Grant Date: ${Grant_Date},
-Expiration Date: ${Expiration_Date}`;
-
-    const qrCodeImage = await QRCode.toDataURL(qrCodeData, {
-      errorCorrectionLevel: "H",
-    });
-
-    const polygonLink = `https://polygonscan.com/tx/${hash}`;
-
-    const certificateData = {
-      Transaction_Hash: hash,
-      Certificate_Hash: combinedHash,
+    const fields = {
       Certificate_Number: Certificate_Number,
-      Name: name,
-      Course_Name: courseName,
+      name: name,
+      courseName: courseName,
       Grant_Date: Grant_Date,
       Expiration_Date: Expiration_Date,
     };
+    const hashedFields = {};
+    for (const field in fields) {
+      hashedFields[field] = calculateHash(fields[field]);
+    }
+    const combinedHash = calculateHash(JSON.stringify(hashedFields));
 
-    res.status(200).json({
-      qrCodeImage: qrCodeImage,
-      polygonLink: polygonLink,
-      details: certificateData,
-    });
+    // Blockchain processing.
+    const contract = await web3i();
+
+    const val = await contract.methods.verifyCertificate(combinedHash).call();
+
+    if (val[0] == true && val[1] == Certificate_Number) {
+      res.status(400).json({ message: "Certificate already issued" });
+    } else {
+      const tx = contract.methods.issueCertificate(
+        Certificate_Number,
+        combinedHash
+      );
+
+      hash = await confirm(tx);
+
+      const qrCodeData = `Transaction Hash: "${hash}",
+    Certificate Hash: ${combinedHash},
+    Certificate Number: ${Certificate_Number},
+    Name: ${name},
+    Course Name: ${courseName},
+    Grant Date: ${Grant_Date},
+    Expiration Date: ${Expiration_Date}`;
+
+      const qrCodeImage = await QRCode.toDataURL(qrCodeData, {
+        errorCorrectionLevel: "H",
+      });
+
+      const polygonLink = `https://polygonscan.com/tx/${hash}`;
+
+      const certificateData = {
+        Transaction_Hash: hash,
+        Certificate_Hash: combinedHash,
+        Certificate_Number: Certificate_Number,
+        Name: name,
+        Course_Name: courseName,
+        Grant_Date: Grant_Date,
+        Expiration_Date: Expiration_Date,
+      };
+
+      res.status(200).json({
+        qrCodeImage: qrCodeImage,
+        polygonLink: polygonLink,
+        details: certificateData,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -322,9 +326,9 @@ Expiration Date: ${Expiration_Date}`;
  */
 
 app.post("/api/verify", upload.single("pdfFile"), async (req, res) => {
-  const file = req.file.path;
-
   try {
+    const file = req.file.path;
+
     const certificateData = await extractQRCodeDataFromPDF(file);
     console.log("Certificate Hash:", certificateData["Certificate Hash"]);
     console.log("Certificate Number:", certificateData["Certificate Number"]);
@@ -347,12 +351,8 @@ app.post("/api/verify", upload.single("pdfFile"), async (req, res) => {
 
     res.status(isCertificateValid ? 200 : 400).json(verificationResponse);
   } catch (error) {
-    const verificationResponse = {
-      message: "Certificate is not valid",
-      detailsQR: detailsQR,
-    };
-
-    res.status(400).json(verificationResponse);
+    console.error(error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
