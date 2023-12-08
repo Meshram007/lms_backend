@@ -1,7 +1,7 @@
 const Web3 = require("web3");
 const abi = require("./abi.json");
 
-const contractAddress = "0x60df8e064e885C1F0DFd53193e4F0c637424c001";
+const contractAddress = "0x25204087ac0aD19b77c8736ce6B88df87c63Cd4d";
 
 async function web3i() {
   const web3 = await new Web3(

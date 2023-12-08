@@ -7,8 +7,8 @@ async function confirm(tx) {
     )
   );
 
-  const contractAddress = "0x60df8e064e885C1F0DFd53193e4F0c637424c001";
-  const account = "0x906dEEC6fD50586B3ebA7802e935eEAA7d16a393";
+  const contractAddress = "0x25204087ac0aD19b77c8736ce6B88df87c63Cd4d";
+  const account = "0x8d7a67E6501224fdF75fa13a6b3db6C11C942f92";
   const gasPrice = await web3.eth.getGasPrice();
 
   const encodedTx = tx.encodeABI();
@@ -28,7 +28,7 @@ async function confirm(tx) {
 
   const signedTransaction = await web3.eth.accounts.signTransaction(
     transactionObject,
-    "99bfc152fa6ad58f6532bad0c1cc2c1862eeb9f2f648b02035030a68f54847b0"
+    ""
   ); 
 
   const ok = await web3.eth.sendSignedTransaction(
